@@ -14,7 +14,7 @@ class Hiera
         Hiera.debug("Looking up #{key} in PostgreSQL backend")
 
         Backend.datasources(scope, order_override) do |source|
-          connection.exec "SELECT value FROM config WHERE path=$1 AND key=$2", [source, key] do |result|
+          connection.exec "SELECT value->'$2' FROM data WHERE path='$1'", [source, key] do |result|
             # Extra logging that we found the key. This can be outputted
             # multiple times if the resolution type is array or hash but that
             # should be expected as the logging will then tell the user ALL the
