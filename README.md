@@ -9,17 +9,16 @@ value should contain the value in JSON format.
 
 Example:
 
-| path                   | key                  | value                   |
-|:-----------------------|:---------------------|:------------------------|
-| 'fqdn/foo.example.com' | 'class::num_param'   | '42'
-| 'fqdn/foo.example.com' | 'class::str_param'   | '"foobar"'
-| 'fqdn/bar.example.com' | 'class::array_param' | '[1, 2, 3]'
-| 'fqdn/baz.example.com' | 'class::hash_param'  | '{ "key1": "value1", "key2": 2 }'
+| path                   | value                                                  |
+|:-----------------------|:-------------------------------------------------------|
+| 'fqdn/foo.example.com' | {"class::num_param": 42, "class::str_param": "foobar"} |
+| 'fqdn/bar.example.com' | {"class::array_param": [1, 2, 3]}                      |
+| 'fqdn/baz.example.com' | {"class::hash_param": { "key1": "value1", "key2": 2 }} |
 
 SQL:
 
     CREATE DATABASE hiera WITH owner=hiera template=template0 encoding='utf8';
-    CREATE TABLE config (path varchar, key varchar, value varchar, UNIQUE(path,key));
+    CREATE TABLE config (path varchar, value json, UNIQUE(path));
 
 Configuration
 =============
@@ -40,5 +39,5 @@ Here is a example hiera config file.
       :connection:
         :dbname: hiera
         :host: localhost
-        :user: root
-        :password: examplepassword
+        :user: hiera
+        :password: hiera
