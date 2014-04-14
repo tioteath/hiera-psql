@@ -3,7 +3,7 @@
 Database schema
 ===============
 
-The database should contain a table 'config' with 2 text columns, path & value.
+The database should contain a table 'data' with 2 text columns, path & value.
 Path is equivalent to the path in the hierarchy (with no file extensions) and
 value should contain the value in JSON format.
 
@@ -18,7 +18,7 @@ Example:
 SQL:
 
     CREATE DATABASE hiera WITH owner=hiera template=template0 encoding='utf8';
-    CREATE TABLE config (path varchar, value json, UNIQUE(path));
+    CREATE TABLE data (path varchar, value json, UNIQUE(path));
 
 Configuration
 =============
