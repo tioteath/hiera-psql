@@ -3,8 +3,8 @@
 Database schema
 ===============
 
-The database should contain a table 'config' with 3 text columns, path, key & value.
-Path is equivalent to the path in the hierarchy (with no file extensions), key is the hiera key and
+The database should contain a table 'config' with 2 text columns, path, key & value.
+Path is equivalent to the path in the hierarchy (with no file extensions) and
 value should contain the value in JSON format.
 
 Example:
