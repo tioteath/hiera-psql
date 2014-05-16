@@ -1,10 +1,10 @@
-require 'pg'
-require 'json'
-
 class Hiera
   module Backend
     class Psql_backend
       def initialize
+        require 'pg'
+        require 'json'
+
         Hiera.debug("Hiera PostgreSQL backend starting")
       end
 
@@ -25,39 +25,45 @@ class Hiera
 
             entry = result.first
 
-            if entry
-              value = entry['?column?']
-              if value
-                new_answer = JSON.load value
+            next unless entry.is_a? Hash
+            next unless entry.has_key? '?column?'
 
-                # for array resolution we just append to the array whatever
-                # we find, we then goes onto the next file and keep adding to
-                # the array
-                #
-                # for priority searches we break after the first found data item
-                new_answer = Backend.parse_answer new_answer, scope
-                if resolution_type.eql? :array
-                  raise Exception, "Hiera type mismatch: " \
-                      "expected Array and got #{new_answer.class}" unless
-                          new_answer.kind_of? Array or
-                              new_answer.kind_of? String
-                  answer ||= []
-                  answer << new_answer
+            value = entry['?column?']
+            next unless value
 
-                elsif resolution_type.eql? :hash
-                  raise Exception, "Hiera type mismatch: " \
-                          "expected Hash and got #{new_answer.class}" unless
-                              new_answer.kind_of? Hash
-                  answer ||= {}
-                  answer = Backend.merge_answer new_answer, answer
+            data = JSON.load value
+            next if data.empty? || data.nil?
 
-                else
-                  return new_answer
-                end
-              end
+            # for array resolution we just append to the array whatever
+            # we find, we then goes onto the next file and keep adding to
+            # the array
+            #
+            # for priority searches we break after the first found data item
+            new_answer = Backend.parse_answer data, scope
+
+            if resolution_type.eql? :array
+              raise Exception, "Hiera type mismatch: " \
+                  "expected Array and got #{new_answer.class}" unless
+                      new_answer.kind_of? Array or
+                          new_answer.kind_of? String
+              answer ||= []
+              answer << new_answer
+
+            elsif resolution_type.eql? :hash
+              raise Exception, "Hiera type mismatch: " \
+                      "expected Hash and got #{new_answer.class}" unless
+                          new_answer.kind_of? Hash
+              answer ||= {}
+              answer = Backend.merge_answer new_answer, answer
+
+            else
+              answer = new_answer
             end
+
           end
         end
+
+        return answer
       end
 
       private
