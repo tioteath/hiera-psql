@@ -15,56 +15,56 @@ class Hiera
         Hiera.debug("Looking up #{key} in PostgreSQL backend")
 
         Backend.datasources(scope, order_override) do |source|
-          connection.exec "SELECT value->$2 FROM data WHERE path=$1",
-              [source, key] do |result|
-            # Extra logging that we found the key. This can be outputted
-            # multiple times if the resolution type is array or hash but that
-            # should be expected as the logging will then tell the user ALL the
-            # places where the key is found.
-            Hiera.debug "Looking for data source #{source}"
+          result = connection.exec(
+              "SELECT value->$2 FROM data WHERE path=$1", [source, key]).first
+          # Extra logging that we found the key. This can be outputted
+          # multiple times if the resolution type is array or hash but that
+          # should be expected as the logging will then tell the user ALL the
+          # places where the key is found.
+          Hiera.debug "Looking for data source #{source}"
 
-            entry = result.first
+          next unless result.is_a? Hash
+          next unless result.has_key? '?column?'
+          value = result['?column?']
+          next if value.nil?
 
-            next unless entry.is_a? Hash
-            next unless entry.has_key? '?column?'
+          data = JSON.load value
 
-            value = entry['?column?']
-            next unless value
+          # for array resolution we just append to the array whatever
+          # we find, we then goes onto the next file and keep adding to
+          # the array
+          #
+          # for priority searches we break after the first found data item
+          new_answer = Backend.parse_answer data, scope
 
-            data = JSON.load value
-            next if data.empty? || data.nil?
-
-            # for array resolution we just append to the array whatever
-            # we find, we then goes onto the next file and keep adding to
-            # the array
-            #
-            # for priority searches we break after the first found data item
-            new_answer = Backend.parse_answer data, scope
-
-            if resolution_type.eql? :array
+          if resolution_type.eql? :array
+            unless new_answer.kind_of? Array or new_answer.kind_of? String
               raise Exception, "Hiera type mismatch: " \
-                  "expected Array and got #{new_answer.class}" unless
-                      new_answer.kind_of? Array or
-                          new_answer.kind_of? String
-              answer ||= []
-              answer << new_answer
-
-            elsif resolution_type.eql? :hash
-              raise Exception, "Hiera type mismatch: " \
-                      "expected Hash and got #{new_answer.class}" unless
-                          new_answer.kind_of? Hash
-              answer ||= {}
-              answer = Backend.merge_answer new_answer, answer
-
-            else
-              answer = new_answer
+                  "expected Array and got #{new_answer.class}"
             end
 
+            answer ||= []
+            answer << new_answer
+
+          elsif resolution_type.eql? :hash
+            unless new_answer.kind_of? Hash
+              raise Exception, "Hiera type mismatch: " \
+                "expected Hash and got #{new_answer.class}"
+            end
+
+            answer ||= {}
+            answer = Backend.merge_answer new_answer, answer
+
+          else
+            answer = new_answer
+            break
           end
+
         end
 
         return answer
       end
+
 
       private
 
