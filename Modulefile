@@ -1,5 +1,5 @@
 name    'dalen-hiera_psql'
-version '0.1.0'
+version '0.2.1'
 source 'http://github.com/dalen/hiera-psql'
 author 'Erik Dalén'
 license 'Apache License, Version 2.0'

@@ -4,8 +4,8 @@
 # loaded once.
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
+
 RSpec.configure do |config|
-  config.treat_symbols_as_metadata_keys_with_true_values = true
   config.run_all_when_everything_filtered = true
   config.filter_run :focus
 
@@ -16,6 +16,20 @@ RSpec.configure do |config|
   config.order = 'random'
 
   config.mock_with :rspec
+
+  # Define rspec helper method
+  module Helpers
+    def mock_values result
+      if result.kind_of? Array
+        result = result.map { |value| value.to_json }
+      else
+        result = [result.to_json]
+      end
+      double 'result', :values => result
+    end
+  end
+
+  config.include Helpers
 end
 
 require 'hiera'
